@@ -1,0 +1,12 @@
+import{a as f}from"./assets/vendor-1b0a9daf.js";(function(){const r=document.createElement("link").relList;if(r&&r.supports&&r.supports("modulepreload"))return;for(const t of document.querySelectorAll('link[rel="modulepreload"]'))s(t);new MutationObserver(t=>{for(const n of t)if(n.type==="childList")for(const d of n.addedNodes)d.tagName==="LINK"&&d.rel==="modulepreload"&&s(d)}).observe(document,{childList:!0,subtree:!0});function o(t){const n={};return t.integrity&&(n.integrity=t.integrity),t.referrerpolicy&&(n.referrerPolicy=t.referrerpolicy),t.crossorigin==="use-credentials"?n.credentials="include":t.crossorigin==="anonymous"?n.credentials="omit":n.credentials="same-origin",n}function s(t){if(t.ep)return;t.ep=!0;const n=o(t);fetch(t.href,n)}})();function u(e,r){const o="https://api.thecatapi.com",s=e,t=new URLSearchParams(r);return fetch(`${o}${s}?${t}`).then(n=>{if(!n.ok)throw new Error(n.statusText);return n.json()})}const h=()=>u("/v1/breeds"),m=e=>u("/v1/images/search",{breed_ids:e}),p=e=>u("/v1/breeds",{breed_ids:e});f.defaults.headers.common["x-api-key"]="live_93kzxPqZS9E6ojCL8XkLA4w6GnhQGrGXpUQVK67EZJHlYyynejv0lm0RzZHOnfPA";const c=document.querySelector("select.breed-select"),l=document.querySelector("div.cat-info"),i=document.querySelector("p.loader"),a=document.querySelector("p.error");c.classList.contains("hidden")&&c.classList.remove("hidden");i.classList.add("hidden");a.classList.add("hidden");h().then(e=>{c.insertAdjacentHTML("beforeend",L(e))}).catch(e=>{a.classList.remove("hidden"),c.classList.add("hidden"),console.error(e)});c.addEventListener("input",e=>{l.innerHTML="",i.classList.remove("hidden"),m(e.target.value).then(r=>{const o=r.map(({url:s})=>s);i.classList.add("hidden"),l.insertAdjacentHTML("afterbegin",y(o.toString()))}).catch(r=>{a.classList.remove("hidden"),c.classList.add("hidden"),console.error(r)}),p(e.target.value).then(r=>{i.classList.add("hidden"),r.filter(({id:o})=>o===e.target.value).map(({name:o,description:s,temperament:t})=>l.insertAdjacentHTML("beforeend",g(o,s,t)))}).catch(r=>{a.classList.remove("hidden"),c.classList.add("hidden"),console.error(r)})});function L(e){return e.map(({id:r,name:o})=>`
+  <option value="${r}">${o}</option>
+  `)}function y(e){return`
+  <img src=${e} alt="Cat Image">
+  `}function g(e,r,o){return`
+  <div>
+    <h3>${e}</h3>
+    <p>${r}</p>
+    <p><b>Temperament:</b> ${o}</p>
+  </div>
+  `}
+//# sourceMappingURL=commonHelpers.js.map
