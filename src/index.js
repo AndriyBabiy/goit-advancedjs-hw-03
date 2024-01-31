@@ -1,84 +1,105 @@
+import SlimSelect from "slim-select";
+import "slim-select/styles";
+import iziToast from "izitoast";
+import "izitoast/dist/css/iziToast.min.css";
 import axios from "axios";
-import * as CatApi from "./cat-api";
-
 axios.defaults.headers.common["x-api-key"] = "live_93kzxPqZS9E6ojCL8XkLA4w6GnhQGrGXpUQVK67EZJHlYyynejv0lm0RzZHOnfPA";
+
+import * as CatApi from "./cat-api";
 
 const selectInput = document.querySelector('select.breed-select');
 const catInfo = document.querySelector('div.cat-info');
 const loader = document.querySelector('p.loader');
 const error = document.querySelector('p.error');
 
-if (selectInput.classList.contains('hidden')){
-  selectInput.classList.remove('hidden');
-}
-loader.classList.add('hidden');
-error.classList.add('hidden');
+hide(error);
+hide(selectInput);
+hide(catInfo);
 
 CatApi.fetchBreeds().then(response => {
-  selectInput.insertAdjacentHTML(
-    'beforeend',
-    createSelectOptionsMarkup(response)
-  )
+  hide(loader);
+  show(selectInput);
+
+  new SlimSelect({
+    select: selectInput,
+    data: slimSelectData(response),
+
+    events: {
+      afterChange: (newVal) => {
+        const value = newVal.map(({ value }) => value);
+        getCat(value);
+      }
+    }
+  });
 }).catch((err) => {
-  error.classList.remove('hidden');
-  selectInput.classList.add('hidden');
-  console.error(err);
+  displayError(err)
 });
 
-selectInput.addEventListener('input', (evt) => {
-  catInfo.innerHTML = '';
+function getCat(evt) {
+  catInfo.innerHTML = ''
 
-  loader.classList.remove('hidden');
+  show(loader);
 
-  CatApi.fetchCatImgByBreed(evt.target.value).then(( data ) => {
-    const elem = data.map(({ url }) => url);
+  CatApi.fetchCatByBreed(evt).then(( data ) => {
+    const url = data.map(({ url }) => url).toString();
+    const name = data.map(elem => elem.breeds).flat().map(({ name }) => name).toString();
+    const description = data.map(elem => elem.breeds).flat().map(({ description }) => description).toString();
+    const temperament = data.map(elem => elem.breeds).flat().map(({ temperament }) => temperament).toString();
 
-    loader.classList.add('hidden');
+    if (data.length === 0) {
+      throw new Error("Cat not found")
+    }
 
     catInfo.insertAdjacentHTML(
       "afterbegin",
-      createCatImageMarkup(elem.toString())
+      createCatMarkup(url, name, description, temperament)
     );
+
+    hide(loader);
+    show(catInfo);
+
   }).catch((err) => {
-    error.classList.remove('hidden');
-    selectInput.classList.add('hidden');
-    console.error(err);
+    displayError(err);
   });
+};
 
-  CatApi.fetchCatInfoByBreed(evt.target.value).then(data => {
-    loader.classList.add('hidden');
+function hide(element) {
+  element.classList.add('hidden');
+}
 
-    const elem = data
-      .filter(({ id }) => id === evt.target.value)
-      .map(({ name, description, temperament }) =>
-        catInfo.insertAdjacentHTML(
-          'beforeend',
-          createCatTextMarkup(name, description, temperament)
-        )
-    );
-  }).catch((err) => {
-    error.classList.remove('hidden');
-    selectInput.classList.add('hidden');
-    console.error(err);
-  });
-});
+function show(element) {
+  element.classList.remove('hidden');
+}
 
-function createSelectOptionsMarkup(arr) {
-  return arr.map(({id, name}) => `
-  <option value="${id}">${name}</option>
-  `
+function displayError(err) {
+  iziToastPopup(err)
+  hide(loader);
+  hide(selectInput);
+  hide(document.querySelector('.ss-main'));
+  console.error(err);
+}
+
+function iziToastPopup(text) {
+  return iziToast.show({
+    title: `${text}`,
+    message: 'Oops! Something went wrong! Try reloading the page!',
+    color: 'red',
+    position: 'topRight',
+    timeout: false,
+  })
+}
+
+function slimSelectData(arr) {
+  return arr.map(({id, name}) => (
+    {text: name, value: id}
+  )
   )
 };
 
-function createCatImageMarkup(url) {
+function createCatMarkup(url, name, desc, temperament) {
   return `
-  <img src=${url} alt="Cat Image">
-  `
-}
-
-function createCatTextMarkup(name, desc, temperament) {
-  return `
-  <div>
+  <img class='cat-img' src=${url} alt="Cat Image">
+  <div class="cat-text">
     <h3>${name}</h3>
     <p>${desc}</p>
     <p><b>Temperament:</b> ${temperament}</p>
